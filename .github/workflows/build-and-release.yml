@@ -77,7 +77,7 @@ jobs:
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ secrets.REPOSITORY_TOKEN }}
 
       - name: Login to Docker Hub
         if: github.event_name != 'pull_request' && secrets.DOCKERHUB_USERNAME != ''
