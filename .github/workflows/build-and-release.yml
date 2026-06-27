@@ -17,6 +17,7 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+  DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}   # 新增：映射 secret 到环境变量
 
 jobs:
   # 代码质量检查
@@ -80,7 +81,8 @@ jobs:
           password: ${{ secrets.REPOSITORY_TOKEN }}
 
       - name: Login to Docker Hub
-        if: github.event_name != 'pull_request' && secrets.DOCKERHUB_USERNAME != ''
+        # 修正：使用 env.DOCKERHUB_USERNAME 判断，而非 secrets
+        if: github.event_name != 'pull_request' && env.DOCKERHUB_USERNAME != ''
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -127,22 +129,14 @@ jobs:
 
       - name: Generate changelog
         run: |
-          # 获取上一个 tag
-          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
-          if [ -z "$PREV_TAG" ]; then
-            CHANGELOG=$(git log --pretty=format:"- %s" --reverse)
-          else
-            CHANGELOG=$(git log $PREV_TAG..HEAD --pretty=format:"- %s" --reverse)
-          fi
-          # 合并模板和 changelog
-          cat .github/release_body_template.md > release_body.md
-          echo -e "\n## 📝 变更日志\n" >> release_body.md
-          echo "$CHANGELOG" >> release_body.md
+          # 如果模板文件不存在，创建默认模板
+          if [ ! -f .github/release_body_template.md ]; then
+            cat > .github/release_body_template.md <<'EOF'
+          ## FileCodeBox-Go ${{ github.ref_name }}
 
-      - name: Create Release
-        uses: softprops/action-gh-release@v2
-        with:
-          body_path: release_body.md
-          generate_release_notes: false    # 改用自定义日志
-          files: dist/*
-          name: FileCodeBox-Go ${{ github.ref_name }}
+          匿名口令分享文本和文件
+
+          ### 🚀 Docker 部署
+          ```bash
+          docker pull ghcr.io/${{ github.repository }}:${{ github.ref_name }}
+          docker run -d -p 12345:12345 -v ./data:/app/data ghcr.io/${{ github.repository }}:${{ github.ref_name }}
