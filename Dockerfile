@@ -2,7 +2,7 @@
 # 与 Python 版 Dockerfile 保持一致的环境变量和端口
 
 # 构建 Go 应用
-FROM golang:1.23-alpine AS builder
+FROM golang:1.26-alpine AS builder
 
 # 安装构建所需工具
 RUN apk add --no-cache git ca-certificates tzdata

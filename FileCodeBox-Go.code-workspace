@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"name": "FileCodeBox-Go",
+			"path": "."
+		},
+		{
+			"name": ".github",
+			"path": "../FileCodeBox/go-app/.github"
+		}
+	],
+	"settings": {}
+}
