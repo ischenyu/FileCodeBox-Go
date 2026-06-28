@@ -121,6 +121,7 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: '1.26'
+          cache: true
 
       - name: Checkout frontend
         uses: actions/checkout@v4
@@ -137,20 +138,28 @@ jobs:
         uses: pnpm/action-setup@v4
         with:
           version: '10'
+          run_install: false
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: frontend/node_modules
+          key: pnpm-${{ runner.os }}-${{ hashFiles('frontend/pnpm-lock.yaml') }}
+          restore-keys: pnpm-${{ runner.os }}-
 
       - name: Build frontend
         working-directory: frontend
         run: |
-          pnpm install
+          pnpm install --prefer-offline
           pnpm build-only --outDir ../assets
 
       - name: Build binaries
         run: |
-          GOOS=linux   GOARCH=amd64 go build -ldflags="-s -w" -o dist/filecodebox-go-linux-amd64   .
-          GOOS=linux   GOARCH=arm64 go build -ldflags="-s -w" -o dist/filecodebox-go-linux-arm64   .
-          GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o dist/filecodebox-go-windows-amd64.exe .
-          GOOS=darwin  GOARCH=amd64 go build -ldflags="-s -w" -o dist/filecodebox-go-darwin-amd64  .
-          GOOS=darwin  GOARCH=arm64 go build -ldflags="-s -w" -o dist/filecodebox-go-darwin-arm64  .
+          GOOS=linux   GOARCH=amd64 go build -ldflags="-s -w" -o dist/filecodebox-linux-amd64   .
+          GOOS=linux   GOARCH=arm64 go build -ldflags="-s -w" -o dist/filecodebox-linux-arm64   .
+          GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o dist/filecodebox-windows-amd64.exe .
+          GOOS=darwin  GOARCH=amd64 go build -ldflags="-s -w" -o dist/filecodebox-darwin-amd64  .
+          GOOS=darwin  GOARCH=arm64 go build -ldflags="-s -w" -o dist/filecodebox-darwin-arm64  .
 
       - name: Generate checksums
         run: cd dist && sha256sum * > checksums.txt
