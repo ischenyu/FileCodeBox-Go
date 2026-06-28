@@ -10,10 +10,10 @@ import (
 
 	"gorm.io/gorm"
 
-	"github.com/ischenyu/internal/config"
-	"github.com/ischenyu/internal/middleware"
-	"github.com/ischenyu/internal/models"
-	"github.com/ischenyu/internal/storage"
+	"github.com/ischenyu/FileCodeBox-Go/internal/config"
+	"github.com/ischenyu/FileCodeBox-Go/internal/middleware"
+	"github.com/ischenyu/FileCodeBox-Go/internal/models"
+	"github.com/ischenyu/FileCodeBox-Go/internal/storage"
 )
 
 // DeleteExpireFiles 定期清理过期文件的后台任务

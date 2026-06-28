@@ -14,11 +14,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 
-	"github.com/ischenyu/internal/config"
-	"github.com/ischenyu/internal/middleware"
-	"github.com/ischenyu/internal/models"
-	"github.com/ischenyu/internal/storage"
-	"github.com/ischenyu/internal/utils"
+	"github.com/ischenyu/FileCodeBox-Go/internal/config"
+	"github.com/ischenyu/FileCodeBox-Go/internal/middleware"
+	"github.com/ischenyu/FileCodeBox-Go/internal/models"
+	"github.com/ischenyu/FileCodeBox-Go/internal/storage"
+	"github.com/ischenyu/FileCodeBox-Go/internal/utils"
 )
 
 // ShareHandler 分享处理器
@@ -515,11 +515,7 @@ func matchWildcard(value, pattern string) bool {
 
 // generateSelectToken 生成下载鉴权 token
 func generateSelectToken(code, secret string) string {
-	if secret == "" {
-		secret = fmt.Sprintf("%d", time.Now().UnixNano())
-	}
-	timestamp := time.Now().UnixMilli() / 1000
-	data := fmt.Sprintf("%s%d000%s", code, timestamp, secret)
+	data := fmt.Sprintf("filecodebox:%s", code)
 	hash := sha256.Sum256([]byte(data))
 	return fmt.Sprintf("%x", hash[:])
 }

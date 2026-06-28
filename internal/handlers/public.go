@@ -3,35 +3,47 @@
 package handlers
 
 import (
+	"embed"
+	"io/fs"
+	"mime"
 	"net/http"
+	"path/filepath"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/ischenyu/internal/config"
-	"github.com/ischenyu/internal/utils"
+	"github.com/ischenyu/FileCodeBox-Go/internal/config"
+	"github.com/ischenyu/FileCodeBox-Go/internal/utils"
 )
 
 // PublicHandler 公共处理器
 type PublicHandler struct {
-	Cfg *config.Settings
+	Cfg            *config.Settings
+	embeddedAssets *embed.FS // 嵌入的 Vue 静态资源（可选）
 }
 
 // NewPublicHandler 创建公共处理器
-func NewPublicHandler(cfg *config.Settings) *PublicHandler {
-	return &PublicHandler{Cfg: cfg}
+// embeddedAssets 可选：嵌入的 Vue 编译后静态资源目录
+func NewPublicHandler(cfg *config.Settings, embeddedAssets *embed.FS) *PublicHandler {
+	return &PublicHandler{Cfg: cfg, embeddedAssets: embeddedAssets}
 }
 
 // Index 首页
 // GET /
 func (h *PublicHandler) Index(c *gin.Context) {
-	// 尝试从主题目录加载 index.html
+	// 优先使用嵌入的 Vue 编译后 index.html
+	if h.embeddedAssets != nil {
+		data, err := fs.ReadFile(h.embeddedAssets, "assets/index.html")
+		if err == nil {
+			c.Data(http.StatusOK, "text/html; charset=utf-8", data)
+			return
+		}
+	}
+
+	// 回退到主题目录的 index.html
 	themeRoot := h.Cfg.GetString("themesSelect")
 	indexPath := themeRoot + "/index.html"
-
-	// 如果主题文件存在，替换模板变量后返回
-	// 否则返回简单 HTML
-	html := h.loadThemeIndex(indexPath)
-	c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(html))
+	c.File(indexPath)
 }
 
 // GetPublicConfig 获取公共配置（旧接口，POST）
@@ -72,8 +84,28 @@ func (h *PublicHandler) Robots(c *gin.Context) {
 
 // ThemeAsset 主题静态资源
 // GET /assets/:asset_path
+// 优先返回嵌入的 Vue 编译静态文件，找不到再回退到主题目录
 func (h *PublicHandler) ThemeAsset(c *gin.Context) {
 	assetPath := c.Param("asset_path")
+	// Gin *param 捕获包含前导 /，需去除
+	assetPath = strings.TrimPrefix(assetPath, "/")
+
+	// 1. 尝试从嵌入的 assets 目录加载（先查 assets/assets/ 即 Vue 编译输出，再查 assets/）
+	if h.embeddedAssets != nil {
+		for _, prefix := range []string{"assets/assets/", "assets/"} {
+			data, err := fs.ReadFile(h.embeddedAssets, prefix+assetPath)
+			if err == nil {
+				contentType := mime.TypeByExtension(filepath.Ext(assetPath))
+				if contentType == "" {
+					contentType = "application/octet-stream"
+				}
+				c.Data(http.StatusOK, contentType, data)
+				return
+			}
+		}
+	}
+
+	// 2. 回退到主题目录
 	themeRoot := h.Cfg.GetString("themesSelect")
 	fullPath := themeRoot + "/assets/" + assetPath
 	c.File(fullPath)
@@ -122,45 +154,4 @@ func (h *PublicHandler) buildPublicMeta() gin.H {
 	}
 }
 
-// loadThemeIndex 加载主题首页模板
-func (h *PublicHandler) loadThemeIndex(themePath string) string {
-	// 如果主题目录存在 index.html，读取并替换变量
-	// 否则返回简单的默认页面
-	return `<!doctype html>
-<html lang="zh-CN">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>` + h.Cfg.GetString("name") + `</title>
-  <meta name="description" content="` + h.Cfg.GetString("description") + `">
-  <meta name="keywords" content="` + h.Cfg.GetString("keywords") + `">
-  <style>
-    body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 24px;
-           font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-           background: ` + h.Cfg.GetString("background") + `; color: #18181b; }
-    main { text-align: center; max-width: 600px; padding: 48px; border-radius: 20px;
-           background: rgba(255,255,255,0.9); box-shadow: 0 22px 60px rgba(0,0,0,.08); }
-    h1 { margin: 0; font-size: 28px; }
-    p { margin: 12px 0 0; color: #71717a; line-height: 1.6; }
-    .links { margin-top: 32px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
-    a { display: inline-flex; align-items: center; min-height: 40px; padding: 0 20px;
-        border-radius: 8px; text-decoration: none; font-weight: 600; }
-    .btn-admin { background: #18181b; color: #fff; }
-    .btn-upload { background: #2563eb; color: #fff; }
-  </style>
-</head>
-<body>
-  <main>
-    <h1>` + h.Cfg.GetString("name") + `</h1>
-    <p>` + h.Cfg.GetString("description") + `</p>
-    <div class="links">
-      <a class="btn-upload" href="/">上传/取件</a>
-      <a class="btn-admin" href="/#/admin">管理后台</a>
-    </div>
-    <p style="font-size:12px;margin-top:24px;">
-      <a href="https://github.com/vastsa/FileCodeBox" target="_blank">GitHub</a> · Version ` + utils.AppVersion + `
-    </p>
-  </main>
-</body>
-</html>`
-}
+

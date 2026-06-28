@@ -10,8 +10,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/ischenyu/internal/config"
-	"github.com/ischenyu/internal/utils"
+	"github.com/ischenyu/FileCodeBox-Go/internal/config"
+	"github.com/ischenyu/FileCodeBox-Go/internal/utils"
 )
 
 // IPRateLimit IP 频率限制器

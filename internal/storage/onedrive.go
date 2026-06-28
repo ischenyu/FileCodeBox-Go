@@ -9,7 +9,7 @@ import (
 	"mime/multipart"
 	"net/http"
 
-	"github.com/ischenyu/internal/models"
+	"github.com/ischenyu/FileCodeBox-Go/internal/models"
 )
 
 // OneDriveStorage OneDrive 存储后端

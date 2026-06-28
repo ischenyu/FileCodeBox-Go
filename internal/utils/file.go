@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
-	"time"
 )
 
 var (
@@ -66,11 +65,8 @@ func GetFileURL(code, jwtSecret string) string {
 
 // generateSelectToken 生成下载鉴权 token
 func generateSelectToken(code, secret string) string {
-	if secret == "" {
-		secret = fmt.Sprintf("%d", time.Now().UnixNano())
-	}
-	timestamp := time.Now().UnixMilli() / 1000
-	data := fmt.Sprintf("%s%d000%s", code, timestamp, secret)
+	// 使用固定盐值保证 key 可复现
+	data := fmt.Sprintf("filecodebox:%s", code)
 	hash := sha256.Sum256([]byte(data))
 	return fmt.Sprintf("%x", hash[:])
 }

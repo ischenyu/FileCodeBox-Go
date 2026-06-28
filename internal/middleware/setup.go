@@ -9,8 +9,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/ischenyu/internal/config"
-	"github.com/ischenyu/internal/utils"
+	"github.com/ischenyu/FileCodeBox-Go/internal/config"
+	"github.com/ischenyu/FileCodeBox-Go/internal/utils"
 )
 
 // SetupGuard 系统初始化拦截中间件
@@ -26,16 +26,16 @@ func SetupGuard(cfg *config.Settings) gin.HandlerFunc {
 			return
 		}
 
-		// 允许初始化相关和健康检查请求通过
+		// 允许首页、静态资源、初始化相关和健康检查请求通过
 		path := c.Request.URL.Path
-		if isSetupPath(path) || path == "/health" {
+		if path == "/" || isAssetPath(path) || isSetupPath(path) || path == "/health" {
 			c.Next()
 			return
 		}
 
-		// 如果是浏览器请求 HTML，返回初始化页面
+		// 如果是浏览器请求 HTML，重定向到首页（Vue SPA 处理初始化引导）
 		if wantsHTMLResponse(c) {
-			c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(buildSetupPageHTML(cfg)))
+			c.Redirect(http.StatusSeeOther, "/")
 			c.Abort()
 			return
 		}
@@ -59,6 +59,11 @@ func IsConfigInitialized(cfg *config.Settings) bool {
 	return !utils.VerifyPassword(legacyDefault, adminToken)
 }
 
+// isAssetPath 判断是否为静态资源路径
+func isAssetPath(path string) bool {
+	return strings.HasPrefix(path, "/assets/")
+}
+
 // isSetupPath 判断是否为 /setup 路径
 func isSetupPath(path string) bool {
 	return strings.TrimRight(path, "/") == "/setup"
@@ -73,34 +78,4 @@ func wantsHTMLResponse(c *gin.Context) bool {
 	return accept == "" || strings.Contains(accept, "text/html") || strings.Contains(accept, "*/*")
 }
 
-// buildSetupPageHTML 构建系统初始化引导页面（简化版）
-// 完整版在 handlers/setup.go 中
-func buildSetupPageHTML(cfg *config.Settings) string {
-	return `<!doctype html>
-<html lang="zh-CN">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>系统未初始化 - FileCodeBox</title>
-  <style>
-    body { margin:0; min-height:100vh; display:grid; place-items:center; padding:24px;
-           font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-           background:#f5f5f7; color:#18181b; }
-    main { width:min(100%,480px); padding:32px; border-radius:16px;
-           background:#fff; text-align:center; box-shadow:0 16px 48px rgba(0,0,0,.08); }
-    h1 { margin:0 0 12px; font-size:24px; }
-    p { margin:0 0 24px; color:#71717a; line-height:1.65; }
-    a { display:inline-flex; align-items:center; justify-content:center;
-        min-height:44px; padding:0 24px; border-radius:10px;
-        background:#18181b; color:#fff; text-decoration:none; font-weight:650; }
-  </style>
-</head>
-<body>
-  <main>
-    <h1>系统尚未初始化</h1>
-    <p>首次使用需要配置管理员密码，请点击下方按钮进入初始化向导。</p>
-    <a href="/setup">进入初始化向导</a>
-  </main>
-</body>
-</html>`
-}
+

@@ -3,17 +3,20 @@
 package server
 
 import (
+	"embed"
+
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 
-	"github.com/ischenyu/internal/config"
-	"github.com/ischenyu/internal/handlers"
-	"github.com/ischenyu/internal/middleware"
-	"github.com/ischenyu/internal/storage"
+	"github.com/ischenyu/FileCodeBox-Go/internal/config"
+	"github.com/ischenyu/FileCodeBox-Go/internal/handlers"
+	"github.com/ischenyu/FileCodeBox-Go/internal/middleware"
+	"github.com/ischenyu/FileCodeBox-Go/internal/storage"
 )
 
 // Setup 配置 Gin 路由引擎
-func Setup(db *gorm.DB, cfg *config.Settings, store storage.FileStorageInterface) *gin.Engine {
+// embeddedAssets 可选：嵌入的 Vue 编译后静态资源
+func Setup(db *gorm.DB, cfg *config.Settings, store storage.FileStorageInterface, embeddedAssets *embed.FS) *gin.Engine {
 	// 生产模式
 	gin.SetMode(gin.ReleaseMode)
 
@@ -26,12 +29,12 @@ func Setup(db *gorm.DB, cfg *config.Settings, store storage.FileStorageInterface
 	r.Use(middleware.SetupGuard(cfg))
 
 	// 创建处理器
-	setupH := handlers.NewSetupHandler(db, cfg)
+	setupH := handlers.NewSetupHandler(db, cfg, embeddedAssets)
 	shareH := handlers.NewShareHandler(db, cfg, store)
 	chunkH := handlers.NewChunkHandler(db, cfg, store)
 	presignH := handlers.NewPresignHandler(db, cfg, store)
 	adminH := handlers.NewAdminHandler(db, cfg)
-	publicH := handlers.NewPublicHandler(cfg)
+	publicH := handlers.NewPublicHandler(cfg, embeddedAssets)
 
 	// 公开路由
 

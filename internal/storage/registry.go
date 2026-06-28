@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/ischenyu/internal/config"
+	"github.com/ischenyu/FileCodeBox-Go/internal/config"
 )
 
 // StorageFactory 存储工厂函数类型

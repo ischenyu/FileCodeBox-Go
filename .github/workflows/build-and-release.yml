@@ -17,7 +17,8 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
-  DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}   # 新增：映射 secret 到环境变量
+  DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+  FRONTEND_REPO: ischenyu/FileCodeBoxFronted
 
 jobs:
   # 代码质量检查
@@ -39,7 +40,7 @@ jobs:
       - name: Go test
         run: go test ./... -v -count=1
 
-  # 构建 Docker 镜像
+  # 构建 Docker 镜像（Dockerfile 内部处理前端构建）
   build:
     needs: lint
     runs-on: ubuntu-latest
@@ -81,7 +82,6 @@ jobs:
           password: ${{ secrets.REPOSITORY_TOKEN }}
 
       - name: Login to Docker Hub
-        # 修正：使用 env.DOCKERHUB_USERNAME 判断，而非 secrets
         if: github.event_name != 'pull_request' && env.DOCKERHUB_USERNAME != ''
         uses: docker/login-action@v3
         with:
@@ -99,7 +99,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  # 版本发布
+  # 版本发布：构建二进制发行版
   release:
     if: startsWith(github.ref, 'refs/tags/v')
     needs: build
@@ -116,20 +116,41 @@ jobs:
         with:
           go-version: '1.26'
 
+      - name: Checkout frontend
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.FRONTEND_REPO }}
+          path: frontend
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: latest
+
+      - name: Build frontend
+        working-directory: frontend
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm build-only --outDir ../assets
+
       - name: Build binaries
         run: |
-          GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o dist/filecodebox-linux-amd64 .
-          GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" -o dist/filecodebox-linux-arm64 .
-          GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o dist/filecodebox-windows-amd64.exe .
-          GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -o dist/filecodebox-darwin-amd64 .
-          GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" -o dist/filecodebox-darwin-arm64 .
+          GOOS=linux   GOARCH=amd64 go build -ldflags="-s -w" -o dist/filecodebox-go-linux-amd64   .
+          GOOS=linux   GOARCH=arm64 go build -ldflags="-s -w" -o dist/filecodebox-go-linux-arm64   .
+          GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o dist/filecodebox-go-windows-amd64.exe .
+          GOOS=darwin  GOARCH=amd64 go build -ldflags="-s -w" -o dist/filecodebox-go-darwin-amd64  .
+          GOOS=darwin  GOARCH=arm64 go build -ldflags="-s -w" -o dist/filecodebox-go-darwin-arm64  .
 
       - name: Generate checksums
         run: cd dist && sha256sum * > checksums.txt
 
       - name: Generate changelog
         run: |
-          # 如果模板文件不存在，创建默认模板
           if [ ! -f .github/release_body_template.md ]; then
             cat > .github/release_body_template.md <<'EOF'
           ## FileCodeBox-Go ${{ github.ref_name }}
@@ -140,3 +161,22 @@ jobs:
           ```bash
           docker pull ghcr.io/${{ github.repository }}:${{ github.ref_name }}
           docker run -d -p 12345:12345 -v ./data:/app/data ghcr.io/${{ github.repository }}:${{ github.ref_name }}
+          ```
+
+          ### 📦 二进制文件
+          下载对应的可执行文件直接运行：
+
+          ```bash
+          ./filecodebox-linux-amd64
+          ```
+          EOF
+          fi
+          envsubst < .github/release_body_template.md > dist/release_body.md
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          body_path: dist/release_body.md
+          files: |
+            dist/filecodebox-*
+            dist/checksums.txt

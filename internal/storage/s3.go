@@ -19,8 +19,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 
-	"github.com/ischenyu/internal/models"
-	"github.com/ischenyu/internal/utils"
+	"github.com/ischenyu/FileCodeBox-Go/internal/models"
+	"github.com/ischenyu/FileCodeBox-Go/internal/utils"
 )
 
 // S3Storage AWS S3 兼容对象存储

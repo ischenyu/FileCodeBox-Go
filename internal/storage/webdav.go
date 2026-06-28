@@ -12,8 +12,8 @@ import (
 	"path"
 	"strings"
 
-	"github.com/ischenyu/internal/models"
-	"github.com/ischenyu/internal/utils"
+	"github.com/ischenyu/FileCodeBox-Go/internal/models"
+	"github.com/ischenyu/FileCodeBox-Go/internal/utils"
 )
 
 // WebDAVStorage WebDAV 存储后端

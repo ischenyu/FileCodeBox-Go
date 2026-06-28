@@ -2,4 +2,4 @@
 package utils
 
 // AppVersion 当前应用版本
-const AppVersion = "3.0.0"
+const AppVersion = "1.0.0"

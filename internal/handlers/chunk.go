@@ -10,11 +10,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 
-	"github.com/ischenyu/internal/config"
-	"github.com/ischenyu/internal/middleware"
-	"github.com/ischenyu/internal/models"
-	"github.com/ischenyu/internal/storage"
-	"github.com/ischenyu/internal/utils"
+	"github.com/ischenyu/FileCodeBox-Go/internal/config"
+	"github.com/ischenyu/FileCodeBox-Go/internal/middleware"
+	"github.com/ischenyu/FileCodeBox-Go/internal/models"
+	"github.com/ischenyu/FileCodeBox-Go/internal/storage"
+	"github.com/ischenyu/FileCodeBox-Go/internal/utils"
 )
 
 // ChunkHandler 切片上传处理器

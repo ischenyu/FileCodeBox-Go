@@ -6,7 +6,7 @@ package storage
 import (
 	"mime/multipart"
 
-	"github.com/ischenyu/internal/models"
+	"github.com/ischenyu/FileCodeBox-Go/internal/models"
 )
 
 // OpenDALStorage OpenDAL 存储后端

@@ -12,13 +12,13 @@ import (
 	"os"
 	"time"
 
-	"github.com/ischenyu/internal/config"
-	"github.com/ischenyu/internal/database"
-	"github.com/ischenyu/internal/middleware"
-	"github.com/ischenyu/internal/server"
-	"github.com/ischenyu/internal/storage"
-	"github.com/ischenyu/internal/tasks"
-	"github.com/ischenyu/internal/utils"
+	"github.com/ischenyu/FileCodeBox-Go/internal/config"
+	"github.com/ischenyu/FileCodeBox-Go/internal/database"
+	"github.com/ischenyu/FileCodeBox-Go/internal/middleware"
+	"github.com/ischenyu/FileCodeBox-Go/internal/server"
+	"github.com/ischenyu/FileCodeBox-Go/internal/storage"
+	"github.com/ischenyu/FileCodeBox-Go/internal/tasks"
+	"github.com/ischenyu/FileCodeBox-Go/internal/utils"
 )
 
 func main() {
@@ -70,11 +70,12 @@ func main() {
 
 	// 加载配置
 	database.StartupLock.Lock()
-	defer database.StartupLock.Unlock()
+	// ... 初始化完成后释放，不阻塞 HTTP 请求
 
 	// 确保 settings 行存在
 	if err := database.EnsureSettingsRow(db, config.DefaultConfig); err != nil {
 		slog.Error("初始化配置失败", "error", err)
+		database.StartupLock.Unlock()
 		os.Exit(1)
 	}
 
@@ -91,8 +92,10 @@ func main() {
 	// 加载配置到运行时
 	if err := config.LoadFromDB(db); err != nil {
 		slog.Error("加载配置失败", "error", err)
+		database.StartupLock.Unlock()
 		os.Exit(1)
 	}
+	database.StartupLock.Unlock()
 
 	// 初始化限流器
 	middleware.InitRateLimiters(cfg)
@@ -105,7 +108,7 @@ func main() {
 	}
 
 	// 配置路由
-	router := server.Setup(db, cfg, store)
+	router := server.Setup(db, cfg, store, &EmbeddedAssets)
 
 	// 启动后台任务
 	go tasks.DeleteExpireFiles(db, cfg, store)

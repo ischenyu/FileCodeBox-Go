@@ -8,8 +8,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/ischenyu/internal/config"
-	"github.com/ischenyu/internal/utils"
+	"github.com/ischenyu/FileCodeBox-Go/internal/config"
+	"github.com/ischenyu/FileCodeBox-Go/internal/utils"
 )
 
 // AdminRequired 验证管理员权限中间件
@@ -50,8 +50,9 @@ func AdminRequired(cfg *config.Settings) gin.HandlerFunc {
 			return
 		}
 
-		// 将 payload 存入上下文
+		// 将 payload 和 token 存入上下文
 		c.Set("admin_payload", payload)
+		c.Set("admin_token_raw", token)
 		c.Next()
 	}
 }

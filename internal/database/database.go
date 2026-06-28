@@ -12,12 +12,13 @@ import (
 	"sync"
 	"time"
 
-	"gorm.io/driver/sqlite"
+	// "gorm.io/driver/sqlite"
+	sqlite "github.com/aceberg/gorm-sqlite" // 替换为新的无需 CGo 的驱动
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 
-	"github.com/ischenyu/internal/config"
-	"github.com/ischenyu/internal/models"
+	"github.com/ischenyu/FileCodeBox-Go/internal/config"
+	"github.com/ischenyu/FileCodeBox-Go/internal/models"
 )
 
 var (

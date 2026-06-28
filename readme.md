@@ -282,7 +282,7 @@ go run .
 
 ```bash
 # 1. Fork 并克隆
-git clone https://github.com/your-username/FileCodeBox-Go.git
+git clone https://github.com/ischenyu/FileCodeBox-Go.git
 
 # 2. 创建分支
 git checkout -b feature/your-feature

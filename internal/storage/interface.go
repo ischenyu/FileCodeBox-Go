@@ -5,7 +5,7 @@ package storage
 import (
 	"mime/multipart"
 
-	"github.com/ischenyu/internal/models"
+	"github.com/ischenyu/FileCodeBox-Go/internal/models"
 )
 
 // FileStorageInterface 文件存储接口

@@ -12,9 +12,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 
-	"github.com/ischenyu/internal/config"
-	"github.com/ischenyu/internal/models"
-	"github.com/ischenyu/internal/utils"
+	"github.com/ischenyu/FileCodeBox-Go/internal/config"
+	"github.com/ischenyu/FileCodeBox-Go/internal/models"
+	"github.com/ischenyu/FileCodeBox-Go/internal/utils"
 )
 
 // AdminHandler 管理后台处理器
@@ -64,8 +64,23 @@ func (h *AdminHandler) Login(c *gin.Context) {
 // Verify 验证管理员身份
 // GET /admin/verify
 func (h *AdminHandler) Verify(c *gin.Context) {
+	token, _ := c.Get("admin_token_raw")
 	payload, _ := c.Get("admin_payload")
-	c.JSON(http.StatusOK, utils.Success(payload))
+
+	expiresAt := 0
+	if p, ok := payload.(map[string]interface{}); ok {
+		if exp, ok := p["exp"].(float64); ok {
+			expiresAt = int(exp)
+		}
+	}
+
+	c.JSON(http.StatusOK, utils.Success(gin.H{
+		"id":         "admin",
+		"username":   "admin",
+		"token":      token,
+		"token_type": "Bearer",
+		"expires_at": expiresAt,
+	}))
 }
 
 // Logout 管理员登出
