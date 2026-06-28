@@ -8,10 +8,8 @@ WORKDIR /frontend
 # 安装 pnpm
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
-# 克隆前端仓库
-RUN apk add --no-cache git && \
-    git clone --depth 1 https://github.com/ischenyu/FileCodeBoxFronted.git . && \
-    rm -rf .git
+# 复制前端源码（由 CI checkout 到 frontend/ 目录）
+COPY frontend/ .
 
 # 安装依赖并构建
 RUN pnpm install --frozen-lockfile && \
