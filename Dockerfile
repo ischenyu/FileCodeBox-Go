@@ -5,8 +5,8 @@ FROM node:22-alpine AS frontend-builder
 
 WORKDIR /frontend
 
-# 安装 pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
+# 安装 pnpm（锁定版本以避免 lockfile 兼容问题）
+RUN npm install -g pnpm@10
 
 # 复制前端源码（由 CI checkout 到 frontend/ 目录）
 COPY frontend/ .
