@@ -141,7 +141,7 @@ jobs:
       - name: Build frontend
         working-directory: frontend
         run: |
-          pnpm install --frozen-lockfile
+          pnpm install
           pnpm build-only --outDir ../assets
 
       - name: Build binaries

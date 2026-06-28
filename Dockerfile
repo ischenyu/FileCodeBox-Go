@@ -12,7 +12,7 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 COPY frontend/ .
 
 # 安装依赖并构建
-RUN pnpm install --frozen-lockfile && \
+RUN pnpm install && \
     pnpm build-only --outDir /assets-build
 
 # --- Go 构建阶段 ---
