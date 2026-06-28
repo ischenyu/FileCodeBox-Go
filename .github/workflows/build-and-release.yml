@@ -55,7 +55,7 @@ jobs:
       - name: Checkout frontend
         uses: actions/checkout@v4
         with:
-          repository: https://github.com/vastsa/FileCodeBoxFronted.git
+          repository: vastsa/FileCodeBoxFronted
           path: frontend
 
       - name: Docker meta
